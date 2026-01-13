@@ -10,10 +10,27 @@ const COMPRESSED_BUCKET = process.env.FILE_UPLOAD_COMPRESSED_BUCKET_NAME;
 // in the compressed bucket when it doesn't already exist.
 module.exports.handler = async (event) => {
     try {
+        // Validate pathParameters exists
+        if (!event.pathParameters || !event.pathParameters.fileKey) {
+            return {
+                statusCode: 400,
+                body: JSON.stringify({
+                    message: "fileKey is required in path parameters",
+                }),
+            };
+        }
+
         const key = decodeURIComponent(event.pathParameters.fileKey);
         const preferCompressed =
             event.queryStringParameters &&
             event.queryStringParameters.variant === "compressed";
+
+        console.log("GET request:", {
+            key,
+            preferCompressed,
+            originalBucket: ORIGINAL_BUCKET,
+            compressedBucket: COMPRESSED_BUCKET,
+        });
 
         // When compressed variant is explicitly requested, try to serve it and
         // create/store it in the compressed bucket if missing.
@@ -112,13 +129,27 @@ module.exports.handler = async (event) => {
             body: data.Body.toString("base64"),
         };
     } catch (err) {
-        console.error(err);
+        console.error("Error retrieving file:", {
+            errorCode: err.code,
+            errorMessage: err.message,
+            key: event.pathParameters?.fileKey,
+            originalBucket: ORIGINAL_BUCKET,
+            compressedBucket: COMPRESSED_BUCKET,
+            stack: err.stack,
+        });
+
+        // Return appropriate status code based on error type
+        const statusCode =
+            err.code === "NoSuchKey" || err.code === "NotFound" ? 404 : 500;
 
         return {
-            statusCode: 404,
+            statusCode,
             body: JSON.stringify({
                 message: "failed to retrieve file from S3",
                 errorMessage: err.message,
+                errorCode: err.code,
+                key: event.pathParameters?.fileKey,
+                bucket: ORIGINAL_BUCKET,
             }),
         };
     }
