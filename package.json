@@ -1,0 +1,18 @@
+{
+  "name": "s3-crud-api-compressed",
+  "version": "1.0.0",
+  "description": "S3 CRUD API with separate bucket for compressed uploads",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "aws-sdk": "^2.1217.0",
+    "serverless-iam-roles-per-function": "^3.2.0",
+    "sharp": "^0.33.0"
+  }
+}
+

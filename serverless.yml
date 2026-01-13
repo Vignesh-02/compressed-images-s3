@@ -1,0 +1,95 @@
+service: viguito-s3-crud-api-compressed
+
+provider:
+    name: aws
+    runtime: nodejs20.x
+    stage: dev
+    region: us-east-1
+    apiName: ${self:service}
+    memorySize: 128 #mb
+    timeout: 30 #sec
+    environment:
+        FILE_UPLOAD_BUCKET_NAME: ${self:custom.fileUploadBucketName}
+        FILE_UPLOAD_COMPRESSED_BUCKET_NAME: ${self:custom.compressedFileUploadBucketName}
+    httpApi:
+        cors: true
+        provider:
+        payload: "2.0"
+
+custom:
+    fileUploadBucketName: ${self:service}-vigu-${self:provider.stage}
+    compressedFileUploadBucketName: ${self:service}-vigu-compressed-${self:provider.stage}
+
+plugins:
+    - serverless-iam-roles-per-function
+
+functions:
+    s3FileUploader:
+        handler: src/upload.handler
+        name: viguito-s3-file-upload-compressed
+        events:
+            - httpApi:
+                  path: /file
+                  method: POST
+        iamRoleStatements:
+            - Effect: Allow
+              Action:
+                  - "s3:PutObject"
+              Resource: arn:aws:s3:::${self:custom.fileUploadBucketName}/*
+            - Effect: Allow
+              Action:
+                  - "s3:PutObject"
+              Resource: arn:aws:s3:::${self:custom.compressedFileUploadBucketName}/*
+    s3FileGet:
+        handler: src/get.handler
+        name: viguito-s3-file-get-compressed
+        events:
+            - httpApi:
+                  path: /file/{fileKey}
+                  method: GET
+        iamRoleStatements:
+            - Effect: Allow
+              Action:
+                  - "s3:GetObject"
+              Resource: arn:aws:s3:::${self:custom.fileUploadBucketName}/*
+            - Effect: Allow
+              Action:
+                  - "s3:GetObject"
+              Resource: arn:aws:s3:::${self:custom.compressedFileUploadBucketName}/*
+            - Effect: Allow
+              Action:
+                  - "s3:ListBucket"
+              Resource: arn:aws:s3:::${self:custom.fileUploadBucketName}
+            - Effect: Allow
+              Action:
+                  - "s3:PutObject"
+              Resource: arn:aws:s3:::${self:custom.compressedFileUploadBucketName}/*
+    s3FileDelete:
+        handler: src/delete.handler
+        name: viguito-s3-file-delete-compressed
+        events:
+            - httpApi:
+                  path: /file/{fileKey}
+                  method: DELETE
+        iamRoleStatements:
+            - Effect: Allow
+              Action:
+                  - "s3:DeleteObject"
+              Resource: arn:aws:s3:::${self:custom.fileUploadBucketName}/*
+            - Effect: Allow
+              Action:
+                  - "s3:DeleteObject"
+              Resource: arn:aws:s3:::${self:custom.compressedFileUploadBucketName}/*
+
+resources:
+    Resources:
+        FileBucket:
+            Type: AWS::S3::Bucket
+            Properties:
+                BucketName: ${self:custom.fileUploadBucketName}
+                AccessControl: Private
+        CompressedFileBucket:
+            Type: AWS::S3::Bucket
+            Properties:
+                BucketName: ${self:custom.compressedFileUploadBucketName}
+                AccessControl: Private
