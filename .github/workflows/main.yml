@@ -2,7 +2,7 @@ name: deploying compressed s3 api
 
 on:
     push:
-        branch: main
+        branches: main
 
 jobs:
 

@@ -8,6 +8,9 @@ const COMPRESSED_BUCKET = process.env.FILE_UPLOAD_COMPRESSED_BUCKET_NAME;
 
 // If `?variant=compressed` is requested, lazily create and store a compressed copy
 // in the compressed bucket when it doesn't already exist.
+
+// Storage: S3 stores the raw bytes, not the base64 string.
+// When someone downloads the file from S3, they get the raw bytes, which their browser or app interprets as an image.
 module.exports.handler = async (event) => {
     try {
         // Validate pathParameters exists
@@ -86,6 +89,7 @@ module.exports.handler = async (event) => {
             }
 
             // Compress the image (convert to JPEG with reasonable quality).
+            // originalObject.Body has the raw bytes of the image.
             const compressedBuffer = await sharp(originalObject.Body)
                 .jpeg({ quality: 70 })
                 .toBuffer();
