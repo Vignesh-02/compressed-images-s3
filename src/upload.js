@@ -39,7 +39,7 @@ module.exports.handler = async (event) => {
         // This buffer is the actual file content to upload.
 
 
-        //         // 1. Client sends this base64 string:
+        //  // 1. Client sends this base64 string:
         // "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="
 
         // // 2. Your code strips the prefix:
